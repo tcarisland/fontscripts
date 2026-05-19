@@ -1,5 +1,10 @@
 name: Collect Fontstats
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 on:
   workflow_dispatch:
     inputs:
@@ -8,7 +13,11 @@ on:
         required: false
         default: 'norway,sweden,denmark'
   schedule:
-    - cron: '0 6 * * *'
+    # Norway local 09:01 — handle DST by scheduling two UTC times:
+    # Mar-Oct (CEST, UTC+2) -> 07:01 UTC
+    - cron: '1 7 * 3-10 *'
+    # Nov-Feb (CET, UTC+1) -> 08:01 UTC
+    - cron: '1 8 * 11,12,1,2 *'
 
 jobs:
   collect:
@@ -29,6 +38,25 @@ jobs:
               php "fontstats/${trimmed}.php"
             fi
           done
+      - name: Persist JSON to branch
+        env:
+          BRANCH: fontstats-data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin
+          git checkout -B "$BRANCH"
+          git add -f fontstats/output/*.json || true
+          git commit -m "fontstats: update data (${GITHUB_RUN_ID})" || echo "no changes to commit"
+          git push --force origin "$BRANCH"
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./fontstats/output
+          publish_branch: gh-pages
+          user_name: github-actions[bot]
+          user_email: github-actions[bot]@users.noreply.github.com
       - name: Upload JSON artifacts
         uses: actions/upload-artifact@v4
         with:
