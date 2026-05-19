@@ -1,0 +1,36 @@
+name: Collect Fontstats
+
+on:
+  workflow_dispatch:
+    inputs:
+      countries:
+        description: 'Comma-separated list of country script names (e.g. norway,sweden,denmark)'
+        required: false
+        default: 'norway,sweden,denmark'
+  schedule:
+    - cron: '0 6 * * *'
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+      - name: Run collectors
+        run: |
+          set -euo pipefail
+          IFS=',' read -ra C <<< "${{ github.event.inputs.countries }}"
+          for c in "${C[@]}"; do
+            trimmed=$(echo "$c" | xargs)
+            if [ -n "$trimmed" ]; then
+              php "fontstats/${trimmed}.php"
+            fi
+          done
+      - name: Upload JSON artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fontstats-json
+          path: fontstats/output/*.json

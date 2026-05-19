@@ -53,28 +53,34 @@ function get_stats_table($list) {
 }
 
 function scrape_and_save($country_code, $country_name) {
-    global $servername, $username, $password, $dbname;
-    
     $url = "https://www.dafont.com/authors.php?cc=" . $country_code;
     $stats = get_author_stats($url);
-    
-    $conn = new mysqli($servername, $username, $password, $dbname);
-    // Check connection
-    if ($conn->connect_error) {
-        die("Connection failed: " . $conn->connect_error);
-    }
-    
+
+    $results = array();
+    $now = date('c');
     foreach ($stats as $person) {
-        $sql_query = "INSERT INTO daily_stats (downloads, designer, link, date_sampled, country)\n";
-        $sql_query .= 'VALUES (' . $person['downloads'] . ', ' . "'" . $person['designer'] . "', " . "'" . $person['link'] . "', " . ' now(), "' . $country_name . '");';
-        
-        if ($conn->query($sql_query) === TRUE) {
-            echo "New record created successfully \ndesigner: " . $person['designer'] . "<br><br>\n";
-        } else {
-            echo "Error: " . $sql_query . "<br>\n\n" . $conn->error;
-        }
+        $results[] = array(
+            'downloads' => intval(str_replace(',', '', $person['downloads'])),
+            'designer' => $person['designer'],
+            'link' => $person['link'],
+            'date_sampled' => $now,
+            'country' => $country_name,
+        );
     }
-    $conn->close();
+
+    $outdir = __DIR__ . '/output';
+    if (!file_exists($outdir)) {
+        mkdir($outdir, 0755, true);
+    }
+
+    $filename = $outdir . '/' . date('Y-m-d') . '_' . $country_code . '.json';
+    $json = json_encode($results, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    if (file_put_contents($filename, $json) === false) {
+        echo "Failed to write JSON to: " . $filename . "\n";
+    } else {
+        echo "Wrote JSON: " . $filename . "\n";
+    }
+    return $filename;
 }
 
 ?>
