@@ -1,6 +1,6 @@
 <?php
 
-include '/home/5/t/tcarisland/scripts/fontstats/lib.php';
+include __DIR__ . '/lib.php';
 
 scrape_and_save(59, "Denmark");
 

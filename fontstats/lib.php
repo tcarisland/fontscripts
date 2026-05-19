@@ -1,6 +1,6 @@
 <?php
 
-include '/home/5/t/tcarisland/scripts/fontstats/login.php';
+include __DIR__ . '/login.php';
 
 function cmp($a, $b)
 {
