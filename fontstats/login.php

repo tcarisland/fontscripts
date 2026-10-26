@@ -1,0 +1,23 @@
+<?php
+// This file is a template for server-side configuration.
+// Fill in real values on the host, keep them out of Git, and use a hashed password
+// for any login credential you store.
+
+$dbHost = getenv('DB_HOST') ?: 'localhost';
+$dbUser = getenv('DB_USER') ?: 'your_db_user';
+$dbPass = getenv('DB_PASSWORD') ?: 'your_db_password';
+$dbName = getenv('DB_NAME') ?: 'your_database_name';
+
+// Example: store the output of hash_password() here when you want a fixed credential
+// in the server copy of this file.
+// $storedPasswordHash = '$argon2id$v=19$m=65536,t=4,p=1$...';
+
+function hash_password(string $plainPassword): string
+{
+    return password_hash($plainPassword, PASSWORD_ARGON2ID);
+}
+
+function verify_password(string $plainPassword, string $storedHash): bool
+{
+    return password_verify($plainPassword, $storedHash);
+}
