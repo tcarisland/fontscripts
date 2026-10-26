@@ -8,7 +8,5 @@ if ($argc < 2) {
 $password = $argv[1];
 $hash = password_hash($password, PASSWORD_ARGON2ID);
 
-echo "Hash: " . $hash . PHP_EOL;
-echo PHP_EOL;
-echo "Paste this into login.php:\n";
+// Output is paste-ready for a server-only login.php.
 echo "\$storedPasswordHash = '" . str_replace("'", "\\'", $hash) . "';\n";
